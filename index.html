@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistemi Antighiaccio — Motori Aeronautici</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1117;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --hot: #f97316;
+    --hot2: #fb923c;
+    --hot-glow: rgba(249,115,22,0.25);
+    --cold: #38bdf8;
+    --cold2: #7dd3fc;
+    --cold-glow: rgba(56,189,248,0.2);
+    --accent: #e2e8f0;
+    --muted: #64748b;
+    --text: #cbd5e1;
+    --heading: #f1f5f9;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --transition: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.65;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    padding: 80px 5vw 60px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(56,189,248,0.12) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(249,115,22,0.08) 0%, transparent 60%);
+    z-index: 0;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    z-index: 0;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cold);
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.2);
+    padding: 4px 14px;
+    border-radius: 99px;
+    margin-bottom: 20px;
+    position: relative; z-index: 1;
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(42px, 7vw, 90px);
+    letter-spacing: 0.03em;
+    line-height: 0.95;
+    color: var(--heading);
+    position: relative; z-index: 1;
+    margin-bottom: 8px;
+  }
+
+  .hero h1 span.hot-text { color: var(--hot); }
+  .hero h1 span.cold-text { color: var(--cold); }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 18px auto 0;
+    position: relative; z-index: 1;
+    font-weight: 300;
+  }
+
+  .hero-divider {
+    display: flex; align-items: center; gap: 16px;
+    max-width: 600px; margin: 40px auto 0;
+    position: relative; z-index: 1;
+  }
+  .hero-divider::before, .hero-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+  .hero-divider span {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--muted); letter-spacing: 0.1em;
+  }
+
+  /* ─── INTRO BANNER ─── */
+  .intro-banner {
+    max-width: 900px; margin: 0 auto 60px;
+    padding: 0 5vw;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .intro-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: flex; align-items: flex-start; gap: 14px;
+    animation: fadeUp 0.6s var(--transition) both;
+  }
+  .intro-stat:nth-child(1) { animation-delay: 0.1s; }
+  .intro-stat:nth-child(2) { animation-delay: 0.2s; }
+
+  .stat-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+  .stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-value { font-size: 14px; color: var(--text); font-weight: 400; }
+
+  /* ─── SECTION TITLE ─── */
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: 0.05em;
+    color: var(--heading);
+    padding: 0 5vw;
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* ─── CARDS GRID ─── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 0 5vw 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s var(--transition),
+                box-shadow 0.3s var(--transition),
+                border-color 0.3s var(--transition);
+    animation: fadeUp 0.6s var(--transition) both;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.10s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.20s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.30s; }
+
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--card-accent, var(--cold));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s var(--transition);
+  }
+
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, var(--card-glow, var(--cold-glow)), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s var(--transition);
+    pointer-events: none;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.14);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .card:hover::before { transform: scaleX(1); }
+  .card:hover::after { opacity: 1; }
+
+  .card.hot { --card-accent: var(--hot); --card-glow: var(--hot-glow); }
+  .card.cold { --card-accent: var(--cold); --card-glow: var(--cold-glow); }
+  .card.mixed { --card-accent: #a78bfa; --card-glow: rgba(167,139,250,0.15); }
+  .card.danger { --card-accent: var(--danger); --card-glow: rgba(239,68,68,0.15); }
+  .card.success { --card-accent: var(--success); --card-glow: rgba(34,197,94,0.15); }
+  .card.gold { --card-accent: #f59e0b; --card-glow: rgba(245,158,11,0.15); }
+
+  .card-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px; border-radius: 99px;
+    margin-bottom: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted);
+  }
+  .card.hot .card-badge { color: var(--hot); background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.2); }
+  .card.cold .card-badge { color: var(--cold); background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.2); }
+  .card.mixed .card-badge { color: #a78bfa; background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.2); }
+  .card.danger .card-badge { color: var(--danger); background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+  .card.success .card-badge { color: var(--success); background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.2); }
+  .card.gold .card-badge { color: #f59e0b; background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
+
+  .card-icon {
+    font-size: 36px; margin-bottom: 12px;
+    display: block;
+  }
+
+  .card h3 {
+    font-family: var(--font-display);
+    font-size: 22px; letter-spacing: 0.04em;
+    color: var(--heading); margin-bottom: 10px;
+  }
+
+  .card p {
+    font-size: 13px; color: var(--muted); line-height: 1.6;
+  }
+
+  .card-arrow {
+    position: absolute; bottom: 20px; right: 20px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 14px;
+    transition: all 0.3s var(--transition);
+  }
+  .card:hover .card-arrow {
+    border-color: var(--card-accent, var(--cold));
+    color: var(--heading);
+    background: rgba(255,255,255,0.05);
+    transform: translate(2px, -2px);
+  }
+
+  /* ─── COMPARISON SECTION ─── */
+  .comparison-section {
+    max-width: 900px; margin: 0 auto 70px;
+    padding: 0 5vw;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+
+  .comparison-table thead th {
+    padding: 14px 18px;
+    font-family: var(--font-display);
+    font-size: 16px; letter-spacing: 0.06em;
+    text-align: left;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .comparison-table thead th:first-child { border-radius: 10px 0 0 0; }
+  .comparison-table thead th:last-child { border-radius: 0 10px 0 0; }
+
+  .comparison-table thead th.hot-col { color: var(--hot); }
+  .comparison-table thead th.cold-col { color: var(--cold); }
+
+  .comparison-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .comparison-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .comparison-table td {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .comparison-table td:first-child {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--muted);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+  }
+  .comparison-table tbody tr:last-child td:first-child { border-radius: 0 0 0 10px; }
+  .comparison-table tbody tr:last-child td:last-child { border-radius: 0 0 10px 0; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 10px; border-radius: 99px;
+    font-size: 11px; font-weight: 500;
+  }
+  .pill.hot { background: rgba(249,115,22,0.12); color: var(--hot); border: 1px solid rgba(249,115,22,0.25); }
+  .pill.cold { background: rgba(56,189,248,0.12); color: var(--cold); border: 1px solid rgba(56,189,248,0.25); }
+  .pill.mixed { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+
+  /* ─── MODAL OVERLAY ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(7,9,15,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s var(--transition);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 18px;
+    max-width: 820px; width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(24px) scale(0.97);
+    transition: transform 0.35s var(--transition);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+  .modal-header {
+    padding: 32px 36px 24px;
+    position: sticky; top: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  }
+
+  .modal-header-left { flex: 1; }
+
+  .modal-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 4vw, 38px);
+    letter-spacing: 0.04em;
+    color: var(--heading); line-height: 1;
+  }
+
+  .modal-close {
+    width: 36px; height: 36px; flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+  .modal-close:hover { border-color: rgba(255,255,255,0.2); color: var(--heading); background: rgba(255,255,255,0.05); }
+
+  .modal-body { padding: 28px 36px 36px; }
+
+  .modal-body h4 {
+    font-family: var(--font-display);
+    font-size: 20px; letter-spacing: 0.05em;
+    color: var(--heading); margin: 28px 0 12px;
+  }
+  .modal-body h4:first-child { margin-top: 0; }
+
+  .modal-body p {
+    font-size: 14px; color: var(--text); line-height: 1.75;
+    margin-bottom: 14px;
+  }
+
+  .modal-body ul {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .modal-body ul li {
+    font-size: 13.5px; color: var(--text);
+    padding: 8px 14px 8px 36px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    position: relative;
+  }
+  .modal-body ul li::before {
+    content: attr(data-icon);
+    position: absolute; left: 12px; top: 8px;
+    font-size: 14px;
+  }
+
+  .formula-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cold);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--cold2);
+    line-height: 1.8;
+  }
+  .formula-box.hot { border-left-color: var(--hot); color: var(--hot2); }
+
+  .example-box {
+    background: rgba(34,197,94,0.05);
+    border: 1px solid rgba(34,197,94,0.15);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 18px 0;
+  }
+  .example-box .ex-label {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--success); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .example-box p { font-size: 13.5px; margin: 0; }
+
+  .warning-box {
+    background: rgba(239,68,68,0.05);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: #fca5a5;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .warning-box::before { content: '⚠️'; flex-shrink: 0; }
+
+  /* SVG DIAGRAMS */
+  .svg-container {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+  .svg-container svg { width: 100%; height: auto; display: block; }
+
+  /* ─── CYCLING DIAGRAM ─── */
+  .cycle-diagram {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .cycle-diagram svg { width: 100%; height: auto; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  @keyframes flow {
+    0% { stroke-dashoffset: 200; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  .flow-path {
+    stroke-dasharray: 6 4;
+    animation: flow 2s linear infinite;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    .intro-banner { grid-template-columns: 1fr; }
+    .modal-body { padding: 20px; }
+    .modal-header { padding: 20px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .comparison-table { font-size: 12px; }
+    .comparison-table td, .comparison-table thead th { padding: 10px 12px; }
+  }
+
+  /* scroll reveal */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s var(--transition), transform 0.6s var(--transition); }
+  .reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-tag">Aviazione · Sistemi Propulsivi · Capitolo 15</div>
+  <h1>SISTEMI<br><span class="cold-text">ANTI</span><span class="hot-text">GHIACCIO</span></h1>
+  <p class="hero-sub">Protezione e sghiacciamento nei motori aeronautici — dal turbogetto al turboelica</p>
+  <div class="hero-divider"><span>▼ ESPLORA LE SEZIONI</span></div>
+</section>
+
+<!-- INTRO STATS -->
+<div class="intro-banner">
+  <div class="intro-stat">
+    <span class="stat-icon">🌡️</span>
+    <div>
+      <div class="stat-label">Condizioni Critiche</div>
+      <div class="stat-value">Nubi con gocce soprafuse + T ≈ 0°C a terra (nebbia)</div>
+    </div>
+  </div>
+  <div class="intro-stat">
+    <span class="stat-icon">⚙️</span>
+    <div>
+      <div class="stat-label">Due Approcci Fondamentali</div>
+      <div class="stat-value">Anti-icing (prevenzione) · De-icing (rimozione)</div>
+    </div>
+  </div>
+</div>
+
+<!-- CARDS -->
+<h2 class="section-title reveal">LE SEZIONI PRINCIPALI</h2>
+
+<div class="cards-grid">
+
+  <div class="card hot" onclick="openModal('intro')">
+    <span class="card-icon">🧊</span>
+    <div class="card-badge">01 · Introduzione</div>
+    <h3>IL PROBLEMA DEL GHIACCIO</h3>
+    <p>Formazione, cause e conseguenze sul motore. Requisiti generali del sistema di protezione.</p>
+    <div class="card-arrow">→</div>
+  </div>
+
+  <div class="card hot" onclick="openModal('aria-calda')">
+    <span class="card-icon">🔥</span>
+    <div class="card-badge">02 · Anti-icing</div>
+    <h3>SISTEMA AD ARIA CALDA</h3>
+    <p>Spillamento dal compressore, valvole riduttrici, distribuzione sulle superfici critiche.</p>
+    <div class="card-arrow">→</div>
+  </div>
+
+  <div class="card cold" onclick="openModal('elettrico')">
+    <span class="card-icon">⚡</span>
+    <div class="card-badge">03 · De-icing</div>
+    <h3>SISTEMA ELETTRICO</h3>
+    <p>Elementi riscaldanti a strati, cicli continui e intermittenti per turboelica.</p>
+    <div class="card-arrow">→</div>
+  </div>
+
+  <div class="card mixed" onclick="openModal('misto')">
+    <span class="card-icon">🔀</span>
+    <div class="card-badge">04 · Combinato</div>
+    <h3>SISTEMA MISTO</h3>
+    <p>Integrazione aria calda + olio + elettrico. Figura 15-2 commentata.</p>
+    <div class="card-arrow">→</div>
+  </div>
+
+  <div class="card success" onclick="openModal('ciclo')">
+    <span class="card-icon">🔄</span>
+    <div class="card-badge">05 · Ciclaggio</div>
+    <h3>CICLO DI RISCALDAMENTO</h3>
+    <p>Velocità lenta e veloce. Sequenza temporizzata (Fig. 15-4). Logica del timer.</p>
+    <div class="card-arrow">→</div>
+  </div>
+
+  <div class="card danger" onclick="openModal('compressore')">
+    <span class="card-icon">💥</span>
+    <div class="card-badge">06 · Danni</div>
+    <h3>DANNI AL COMPRESSORE</h3>
+    <p>Distacco di frammenti di ghiaccio, FOD, riduzione di portata e stallo del compressore.</p>
+    <div class="card-arrow">→</div>
+  </div>
+
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="comparison-section reveal">
+  <h2 class="section-title" style="padding:0; margin-bottom:20px;">CONFRONTO RAPIDO</h2>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Parametro</th>
+        <th class="hot-col">🔥 Aria Calda (Anti-icing)</th>
+        <th class="cold-col">⚡ Elettrico (De-icing)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Funzione principale</td>
+        <td><span class="pill hot">Prevenzione</span></td>
+        <td><span class="pill cold">Rimozione</span></td>
+      </tr>
+      <tr>
+        <td>Motore tipico</td>
+        <td>Turbogetto / Turbofan</td>
+        <td>Turboelica</td>
+      </tr>
+      <tr>
+        <td>Fonte di energia</td>
+        <td>Bleed air — ultimo stadio compressore</td>
+        <td>Generatore elettrico a bordo</td>
+      </tr>
+      <tr>
+        <td>Componenti protetti</td>
+        <td>Presa d'aria, ogiva, palette guida statore</td>
+        <td>Eliche, anello imbocco, presa radiatore olio</td>
+      </tr>
+      <tr>
+        <td>Modalità operativa</td>
+        <td>Continua — valvole regolatrici pressione</td>
+        <td>Continua + intermittente ciclica</td>
+      </tr>
+      <tr>
+        <td>Impatto prestazioni</td>
+        <td>Perdita di portata aria (spillamento)</td>
+        <td>Carico elettrico sul generatore</td>
+      </tr>
+      <tr>
+        <td>Struttura elementi riscaldanti</td>
+        <td>Condotti interni / manifold aria</td>
+        <td>Strisce conduttrici + neoprene + tessuto vetro</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FOOTER -->
+<footer>SISTEMI ANTIGHIACCIO · Motori Aeronautici · Capitolo 15 &nbsp;|&nbsp; Infografica Interattiva</footer>
+
+<!-- ═══════════════════════════════════════════════════════ MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-badge" id="modal-badge">──</div>
+        <div class="modal-title" id="modal-title">Titolo</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const modals = {
+
+  intro: {
+    badge: '01 · Introduzione',
+    title: 'IL PROBLEMA DEL GHIACCIO',
+    html: `
+      <h4>Contesto Operativo</h4>
+      <p>La formazione di ghiaccio è un rischio aeronautico che si manifesta in due scenari principali:</p>
+      <ul>
+        <li data-icon="☁️">Volo attraverso <strong>nubi contenenti gocce d'acqua soprafuse</strong> (supercooled liquid water, SLW) — gocce rimaste allo stato liquido a temperature inferiori a 0°C.</li>
+        <li data-icon="🌫️">Prove a terra con <strong>nebbia e temperatura dell'aria prossima allo zero</strong> (condizioni di brina o freezing fog).</li>
+      </ul>
+
+      <h4>Zone Critiche del Motore</h4>
+      <div class="svg-container">
+        <svg viewBox="0 0 520 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="eng-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+            <linearGradient id="hot-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+          </defs>
+          <!-- Engine body -->
+          <ellipse cx="260" cy="120" rx="200" ry="95" fill="url(#eng-grad)" stroke="#334155" stroke-width="1.5"/>
+          <!-- Intake ring -->
+          <ellipse cx="80" cy="120" rx="30" ry="95" fill="none" stroke="#f97316" stroke-width="3"/>
+          <text x="42" y="220" fill="#f97316" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">ANELLO</text>
+          <text x="42" y="232" fill="#f97316" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">INGRESSO</text>
+          <!-- Nose cone -->
+          <polygon points="50,120 80,85 80,155" fill="#f97316" opacity="0.7"/>
+          <text x="28" y="117" fill="#fb923c" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">OGIVA</text>
+          <!-- Guide vanes -->
+          <line x1="100" y1="60" x2="115" y2="100" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="115" y1="60" x2="128" y2="99" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="130" y1="62" x2="141" y2="100" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="100" y1="180" x2="115" y2="140" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="115" y1="180" x2="128" y2="141" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="130" y1="178" x2="141" y2="140" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <text x="120" y="15" fill="#38bdf8" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">PALETTE</text>
+          <text x="120" y="27" fill="#38bdf8" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">GUIDA</text>
+          <!-- Compressor stages circles -->
+          <ellipse cx="200" cy="120" rx="20" ry="80" fill="none" stroke="#475569" stroke-width="1.5"/>
+          <ellipse cx="240" cy="120" rx="20" ry="72" fill="none" stroke="#475569" stroke-width="1.5"/>
+          <ellipse cx="280" cy="120" rx="20" ry="62" fill="none" stroke="#475569" stroke-width="1.5"/>
+          <ellipse cx="320" cy="120" rx="20" ry="50" fill="none" stroke="#475569" stroke-width="1.5"/>
+          <!-- Bleed arrow from last stage -->
+          <path d="M320 68 Q320 40 380 30" stroke="#f97316" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+          <polygon points="380,30 370,25 374,35" fill="#f97316"/>
+          <text x="385" y="28" fill="#f97316" font-size="10" font-family="DM Mono,monospace">BLEED AIR</text>
+          <!-- Combustion zone -->
+          <ellipse cx="380" cy="120" rx="25" ry="38" fill="rgba(249,115,22,0.15)" stroke="#f97316" stroke-width="1"/>
+          <text x="380" y="165" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">CAMERA</text>
+          <text x="380" y="175" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">COMBUSTIONE</text>
+          <!-- Label zones -->
+          <rect x="85" y="6" width="70" height="18" rx="4" fill="rgba(56,189,248,0.1)" stroke="rgba(56,189,248,0.3)" stroke-width="1"/>
+          <!-- Ice flow arrows into intake -->
+          <path d="M10,100 L55,110" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="4,3" class="flow-path"/>
+          <path d="M10,120 L50,120" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="4,3" class="flow-path"/>
+          <path d="M10,140 L55,130" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="4,3" class="flow-path"/>
+          <text x="8" y="96" fill="#7dd3fc" font-size="9" font-family="DM Mono,monospace">H₂O</text>
+        </svg>
+      </div>
+
+      <h4>Conseguenze della Formazione di Ghiaccio</h4>
+      <ul>
+        <li data-icon="📉">Riduzione della sezione di passaggio → <strong>diminuzione del flusso d'aria</strong> al compressore → calo di prestazioni e possibili malfunzionamenti.</li>
+        <li data-icon="💥">Distacco di <strong>frammenti di ghiaccio</strong> → Foreign Object Damage (FOD) alle palette del compressore.</li>
+        <li data-icon="⚖️">Squilibrio di massa sull'elica (nei turboelica) → vibrazioni strutturali.</li>
+      </ul>
+
+      <h4>Requisiti Progettuali del Sistema</h4>
+      <ul>
+        <li data-icon="✅">Protezione <strong>estesa a tutto il campo operativo</strong> del velivolo.</li>
+        <li data-icon="🔧">Alta affidabilità e facilità di manutenzione.</li>
+        <li data-icon="⚖️">Peso contenuto: nessuna penalizzazione strutturale eccessiva.</li>
+        <li data-icon="⚙️">Perdita di prestazioni del motore <strong>minima e accettabile</strong> durante il funzionamento.</li>
+      </ul>
+
+      <div class="warning-box">
+        Nessun sistema può essere eccessivamente pesante o causare forti perdite di prestazioni: il trade-off sicurezza/efficienza è critico nel progetto.
+      </div>
+    `
+  },
+
+  'aria-calda': {
+    badge: '02 · Anti-icing',
+    title: 'SISTEMA AD ARIA CALDA',
+    html: `
+      <h4>Principio di Funzionamento</h4>
+      <p>Il sistema ad aria calda opera per <strong>prevenzione continua</strong>: riscalda le superfici mantenendole al di sopra del punto di congelamento, impedendo la nucleazione del ghiaccio. È la tecnologia dominante sui <em>turbogetti</em> e <em>turbofan</em>.</p>
+
+      <h4>Schema del Circuito</h4>
+      <div class="svg-container">
+        <svg viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#f97316"/>
+            </marker>
+            <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8"/>
+            </marker>
+          </defs>
+
+          <!-- Compressor block -->
+          <rect x="280" y="60" width="120" height="180" rx="8" fill="#1e293b" stroke="#334155"/>
+          <text x="340" y="148" fill="#94a3b8" font-size="11" font-family="DM Mono,monospace" text-anchor="middle">COMPRESSORE</text>
+          <text x="340" y="162" fill="#94a3b8" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">(stadi)</text>
+
+          <!-- Compressor stage lines -->
+          <line x1="280" y1="90" x2="400" y2="90" stroke="#475569" stroke-width="1"/>
+          <line x1="280" y1="110" x2="400" y2="110" stroke="#475569" stroke-width="1"/>
+          <line x1="280" y1="130" x2="400" y2="130" stroke="#475569" stroke-width="1"/>
+          <line x1="280" y1="150" x2="400" y2="150" stroke="#475569" stroke-width="1"/>
+          <line x1="280" y1="170" x2="400" y2="170" stroke="#475569" stroke-width="1"/>
+          <line x1="280" y1="190" x2="400" y2="190" stroke="#475569" stroke-width="1"/>
+          <line x1="280" y1="210" x2="400" y2="210" stroke="#475569" stroke-width="1"/>
+
+          <!-- Bleed tap from last stage -->
+          <line x1="340" y1="70" x2="340" y2="30" stroke="#f97316" stroke-width="2.5" marker-end="url(#arr)"/>
+          <rect x="295" y="18" width="90" height="16" rx="4" fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.3)"/>
+          <text x="340" y="29" fill="#f97316" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">ULTIMO STADIO</text>
+
+          <!-- External duct -->
+          <path d="M340,30 Q340,15 200,15 Q80,15 80,50" stroke="#f97316" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
+
+          <!-- Pressure regulating valve -->
+          <rect x="170" y="40" width="60" height="24" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/>
+          <text x="200" y="55" fill="#fb923c" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">P-REG VALVE</text>
+
+          <!-- Distribution manifold -->
+          <path d="M200,64 L200,90" stroke="#f97316" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
+          <rect x="140" y="90" width="120" height="28" rx="6" fill="rgba(249,115,22,0.08)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="200" y="108" fill="#fb923c" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">AIR INTAKE MANIFOLD</text>
+
+          <!-- Distribution to components -->
+          <path d="M200,118 L200,140" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+          <path d="M170,118 L100,140" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+          <path d="M230,118 L300,140 " stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+          <!-- Protected components -->
+          <rect x="60" y="140" width="80" height="28" rx="6" fill="rgba(249,115,22,0.06)" stroke="rgba(249,115,22,0.3)"/>
+          <text x="100" y="158" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">PRESA D'ARIA</text>
+
+          <rect x="160" y="140" width="80" height="28" rx="6" fill="rgba(249,115,22,0.06)" stroke="rgba(249,115,22,0.3)"/>
+          <text x="200" y="158" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">OGIVA</text>
+
+          <rect x="260" y="140" width="80" height="28" rx="6" fill="rgba(249,115,22,0.06)" stroke="rgba(249,115,22,0.3)"/>
+          <text x="300" y="153" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">PALETTE</text>
+          <text x="300" y="163" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">GUIDA</text>
+
+          <!-- Nose cowl outlet -->
+          <path d="M100,168 L100,200 Q100,220 60,220" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" fill="none"/>
+          <text x="45" y="218" fill="#64748b" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">SFOGO</text>
+
+          <!-- Legend -->
+          <rect x="350" y="250" width="12" height="3" rx="2" fill="#f97316"/>
+          <text x="368" y="254" fill="#94a3b8" font-size="10" font-family="DM Mono,monospace">Aria calda (bleed)</text>
+          <rect x="350" y="265" width="12" height="3" rx="2" fill="#475569"/>
+          <text x="368" y="270" fill="#94a3b8" font-size="10" font-family="DM Mono,monospace">Struttura motore</text>
+
+          <!-- Title -->
+          <text x="20" y="288" fill="#64748b" font-size="9" font-family="DM Mono,monospace">Fig. A — Schema circuito antighiaccio ad aria calda</text>
+        </svg>
+      </div>
+
+      <h4>Superfici Protette</h4>
+      <ul>
+        <li data-icon="🔥">Presa d'aria motore (nose cowl / air intake lip)</li>
+        <li data-icon="🔥">Palette guida all'ingresso compressore (Inlet Guide Vanes – IGV)</li>
+        <li data-icon="🔥">Cono / ogiva d'ingresso motore (nose cone)</li>
+        <li data-icon="🔥">Primo stadio dello statore compressore</li>
+      </ul>
+
+      <div class="formula-box hot">
+        Nota: le palette del ROTORE non richiedono protezione attiva
+        → la forza centrifuga (F = m·ω²·r) rimuove qualsiasi formazione
+           di ghiaccio senza intervento del sistema.
+      </div>
+
+      <h4>Configurazioni: Sistemi Separati</h4>
+      <p>In alcuni motori l'antighiaccio è <strong>separato tra cono e anello d'ingresso</strong>:</p>
+      <ul>
+        <li data-icon="🔴"><strong>Cono d'ingresso:</strong> aria non regolata, prelevata direttamente — condotti interni, alimentazione continua.</li>
+        <li data-icon="🟠"><strong>Anello d'ingresso:</strong> aria regolata tramite valvole regolatrici di pressione, condotti esterni.</li>
+      </ul>
+
+      <h4>Controllo tramite Valvole Regolatrici</h4>
+      <p>Le valvole svolgono due funzioni critiche:</p>
+      <ul>
+        <li data-icon="⚙️">Impedire la <strong>sovrapressione</strong> nel circuito antighiaccio.</li>
+        <li data-icon="📊">Limitare la <strong>perdita di portata</strong> al compressore ad alti regimi: il bleed sottrae portata all'ultimo stadio, riducendo la spinta disponibile.</li>
+      </ul>
+
+      <div class="formula-box hot">
+        Bilancio energetico semplificato:
+        Q̇_riscaldamento = ṁ_bleed · cp · (T_bleed − T_superficie)
+        
+        Dove:
+          ṁ_bleed  = portata d'aria spillata  [kg/s]
+          cp       = calore specifico aria     ≈ 1005 J/(kg·K)
+          T_bleed  = temperatura aria compressa (≈ 400–600 K)
+          T_sup    = temperatura superficie da proteggere
+      </div>
+
+      <div class="example-box">
+        <div class="ex-label">✈️ Esempio Pratico — Turbofan Civile</div>
+        <p>Su un turbofan a doppio flusso (es. CFM56), l'aria calda è prelevata dall'ultimo stadio HPC (High Pressure Compressor) a ~550 K e ~25 bar. La valvola di regolazione riduce la pressione a ~3–4 bar prima di distribuirla al lip dell'entrata e all'ogiva. Il consumo di bleed air è ≈1–3% della portata totale del compressore, corrispondente a una riduzione di spinta di circa 0.5–1.5%.</p>
+      </div>
+    `
+  },
+
+  elettrico: {
+    badge: '03 · De-icing Elettrico',
+    title: 'SISTEMA ELETTRICO',
+    html: `
+      <h4>Filosofia: Rimozione vs Prevenzione</h4>
+      <p>Il sistema elettrico è un <strong>de-icer</strong>, non un anti-icer: <em>permette</em> la formazione di un sottile strato di ghiaccio, poi lo rimuove ciclicamente per azione termica ed aerodinamica. Questa scelta riduce il carico energetico medio rispetto al riscaldamento continuo.</p>
+
+      <h4>Struttura degli Elementi Riscaldanti</h4>
+
+      <div class="svg-container">
+        <svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Layer stack cross-section -->
+          <text x="250" y="20" fill="#94a3b8" font-size="11" font-family="DM Mono,monospace" text-anchor="middle">SEZIONE TRASVERSALE — ELEMENTO RISCALDANTE</text>
+
+          <!-- Layers from outside in -->
+          <!-- Polyurethane paint -->
+          <rect x="60" y="35" width="380" height="18" rx="0" fill="#1e40af" opacity="0.5"/>
+          <text x="455" y="48" fill="#93c5fd" font-size="10" font-family="DM Mono,monospace">Vernice poliuretanica</text>
+
+          <!-- Neoprene outer -->
+          <rect x="60" y="53" width="380" height="24" rx="0" fill="#1e3a5f"/>
+          <text x="455" y="68" fill="#7dd3fc" font-size="10" font-family="DM Mono,monospace">Neoprene (esterno)</text>
+
+          <!-- Glass cloth -->
+          <rect x="60" y="77" width="380" height="20" rx="0" fill="#374151"/>
+          <!-- Weave pattern lines -->
+          <line x1="80" y1="77" x2="80" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="100" y1="77" x2="100" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="120" y1="77" x2="120" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="140" y1="77" x2="140" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="160" y1="77" x2="160" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="180" y1="77" x2="180" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="200" y1="77" x2="200" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="220" y1="77" x2="220" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="240" y1="77" x2="240" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="260" y1="77" x2="260" y2="97" stroke="#6b7280" stroke-width="0.8"/>
+          <line x1="60" y1="85" x2="440" y2="85" stroke="#6b7280" stroke-width="0.8"/>
+          <text x="455" y="91" fill="#94a3b8" font-size="10" font-family="DM Mono,monospace">Tessuto di vetro + resina</text>
+
+          <!-- Conductive strips -->
+          <rect x="60" y="97" width="380" height="20" rx="0" fill="#1a2235"/>
+          <rect x="80" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <rect x="130" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <rect x="180" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <rect x="230" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <rect x="280" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <rect x="330" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <rect x="380" y="99" width="30" height="16" rx="2" fill="#f59e0b" opacity="0.8"/>
+          <text x="455" y="111" fill="#fbbf24" font-size="10" font-family="DM Mono,monospace">Strisce conduttrici</text>
+
+          <!-- Glass cloth inner -->
+          <rect x="60" y="117" width="380" height="18" rx="0" fill="#374151" opacity="0.7"/>
+          <text x="455" y="129" fill="#94a3b8" font-size="10" font-family="DM Mono,monospace">Tessuto di vetro (interno)</text>
+
+          <!-- Neoprene inner -->
+          <rect x="60" y="135" width="380" height="22" rx="0" fill="#1e3a5f" opacity="0.8"/>
+          <text x="455" y="149" fill="#7dd3fc" font-size="10" font-family="DM Mono,monospace">Neoprene (interno)</text>
+
+          <!-- Engine surface -->
+          <rect x="60" y="157" width="380" height="20" rx="0" fill="#0f172a"/>
+          <text x="455" y="170" fill="#64748b" font-size="10" font-family="DM Mono,monospace">Fasciame motore</text>
+
+          <!-- Ice layer on top -->
+          <rect x="60" y="25" width="380" height="12" rx="0" fill="#bfdbfe" opacity="0.3"/>
+          <text x="250" y="20" fill="#bfdbfe" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">← strato ghiaccio (durante OFF) →</text>
+
+          <!-- Dimension arrows -->
+          <line x1="45" y1="35" x2="45" y2="175" stroke="#475569" stroke-width="1"/>
+          <line x1="40" y1="35" x2="50" y2="35" stroke="#475569" stroke-width="1"/>
+          <line x1="40" y1="175" x2="50" y2="175" stroke="#475569" stroke-width="1"/>
+          <text x="30" y="110" fill="#64748b" font-size="10" font-family="DM Mono,monospace" writing-mode="vertical-rl" transform="rotate(180,30,110)">SPESSORE</text>
+
+          <!-- Heat flow arrows -->
+          <path d="M95,115 L95,45" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <polygon points="95,42 91,50 99,50" fill="#ef4444"/>
+          <path d="M145,115 L145,45" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <polygon points="145,42 141,50 149,50" fill="#ef4444"/>
+          <text x="120" y="210" fill="#ef4444" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">▲ flusso di calore verso il ghiaccio</text>
+        </svg>
+      </div>
+
+      <h4>Superfici Protette (Turboelica)</h4>
+      <ul>
+        <li data-icon="🔵">Anello d'imbocco motore</li>
+        <li data-icon="🔵">Pale dell'elica (zone di attacco)</li>
+        <li data-icon="🔵">Imbocco presa d'aria del radiatore olio (talvolta)</li>
+      </ul>
+
+      <h4>Generatore e Distribuzione dei Carichi</h4>
+      <p>La corrente è fornita da un <strong>generatore dedicato a bordo</strong>. Per mantenere peso e dimensioni contenuti, i carichi elettrici sono distribuiti ciclicamente:</p>
+
+      <div class="formula-box">
+        Potenza media richiesta:
+        P_media = P_istantanea × (t_ON / T_ciclo)
+
+        Es.: P_ist = 5 kW  |  t_ON = 30 s  |  T_ciclo = 120 s
+        → P_media = 5000 × (30/120) = 1250 W  ← generatore dimensionato su questo!
+      </div>
+
+      <h4>Materiali e Protezione Atmosferica</h4>
+      <ul>
+        <li data-icon="🧲">Strisce conduttrici in materiale resistivo (es. nichel-cromo)</li>
+        <li data-icon="🪨">Fissaggio in strati di <strong>neoprene</strong> (elastomero flessibile, resistente a freddo e ozono)</li>
+        <li data-icon="🔶">Matrice di <strong>tessuto di vetro impregnato di resina epossidica</strong> — isolamento elettrico + rinforzo strutturale</li>
+        <li data-icon="🎨">Finitura esterna con <strong>vernice poliuretanica</strong> — protezione da UV, umidità, erosione aerodinamica</li>
+      </ul>
+
+      <div class="example-box">
+        <div class="ex-label">✈️ Esempio Pratico — Turboelica da Trasporto Regionale</div>
+        <p>Su un ATR 72 (motori PW127), il sistema elettrico riscalda le pale dell'elica a 6 zone distribuite ciclicamente. La presa d'aria motore ha elementi continui (sempre ON), mentre le pale dell'elica sono scaldate in sequenza progressiva dal mozzo verso la punta. Il ciclo rapido è attivato automaticamente quando T_OAT > −20°C; il ciclo lento sotto −20°C, dove il tasso di accrezione è minore.</p>
+      </div>
+    `
+  },
+
+  misto: {
+    badge: '04 · Sistema Misto',
+    title: 'SISTEMA COMBINATO',
+    html: `
+      <h4>Filosofia dell'Integrazione</h4>
+      <p>In alcuni motori (tipicamente turboelica di medie dimensioni) si adotta un sistema <strong>ibrido</strong> che combina tre tecnologie in una singola architettura integrata (Fig. 15-2 del testo):</p>
+
+      <div class="svg-container">
+        <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg">
+          <!-- Engine intake cross-section -->
+          <ellipse cx="260" cy="140" rx="210" ry="120" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+          <ellipse cx="260" cy="140" rx="170" ry="90" fill="#07090f" stroke="#334155" stroke-width="1"/>
+
+          <!-- HOT AIR zone — intake strut -->
+          <path d="M200,60 Q260,50 320,60 L330,80 Q260,70 190,80 Z" fill="rgba(249,115,22,0.25)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="260" y="73" fill="#f97316" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">INTAKE STRUT — ARIA CALDA</text>
+
+          <!-- HOT AIR zone — nose cowling -->
+          <path d="M100,110 Q90,140 100,170 L120,165 Q112,140 120,115 Z" fill="rgba(249,115,22,0.2)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="75" y="142" fill="#f97316" font-size="9" font-family="DM Mono,monospace" text-anchor="middle" transform="rotate(-90,75,142)">NOSE COWLING</text>
+
+          <!-- OIL zone — oil cooler at bottom -->
+          <path d="M210,220 Q260,232 310,220 L315,240 Q260,252 205,240 Z" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="260" y="238" fill="#f59e0b" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">OIL COOLER INTAKE</text>
+
+          <!-- ELECTRICAL zone — inlet guide vanes -->
+          <line x1="160" y1="80" x2="175" y2="120" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="180" y1="78" x2="194" y2="118" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="200" y1="77" x2="212" y2="117" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="160" y1="200" x2="175" y2="160" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="180" y1="202" x2="194" y2="162" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="200" y1="203" x2="212" y2="163" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+
+          <!-- Junction box -->
+          <rect x="390" y="125" width="60" height="30" rx="5" fill="#1e293b" stroke="#334155"/>
+          <text x="420" y="143" fill="#94a3b8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">JUNCTION BOX</text>
+
+          <!-- Wire runs -->
+          <path d="M220,120 Q320,100 390,140" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3" fill="none"/>
+          <path d="M220,160 Q320,180 390,140" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3" fill="none"/>
+
+          <!-- Oil pipes -->
+          <path d="M260,240 Q280,255 420,160" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3" fill="none"/>
+
+          <!-- Hot air duct -->
+          <path d="M455,110 Q480,110 490,140 Q480,160 455,165" stroke="#f97316" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+          <text x="492" y="142" fill="#f97316" font-size="8" font-family="DM Mono,monospace">HOT AIR VALVE</text>
+
+          <!-- Legend -->
+          <rect x="15" y="245" width="10" height="3" rx="1" fill="#f97316"/>
+          <text x="30" y="250" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace">Aria calda</text>
+          <rect x="15" y="258" width="10" height="3" rx="1" fill="#f59e0b"/>
+          <text x="30" y="263" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace">Olio caldo</text>
+          <rect x="15" y="271" width="10" height="3" rx="1" fill="#38bdf8"/>
+          <text x="30" y="276" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace">Elettrico</text>
+          <text x="250" y="278" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">Fig. B — Sistema combinato (da Fig. 15-2)</text>
+        </svg>
+      </div>
+
+      <h4>Le Tre Componenti del Sistema Misto</h4>
+      <ul>
+        <li data-icon="🔥"><strong>Aria Calda:</strong> protegge l'intake strut e il nose cowling. Gestita dalla hot air valve e da condotti interni.</li>
+        <li data-icon="🟡"><strong>Olio Caldo:</strong> l'olio di scavenge (già caldo dopo aver raffreddato i cuscinetti) circola sul bordo dell'ingresso motore e poi passa all'oil cooler — sfruttamento del calore di scarto del motore.</li>
+        <li data-icon="⚡"><strong>Elettrico:</strong> copre le palette guida (IGV) e l'anello di imbocco, con connessione alla junction box per distribuzione ciclica.</li>
+      </ul>
+
+      <h4>Circuito Olio: Efficienza Energetica</h4>
+      <p>Il circuito dell'olio permette un recupero energetico elegante:</p>
+
+      <div class="formula-box">
+        Il percorso dell'olio nel sistema misto:
+        
+        Cuscinetti motore
+              ↓  (olio a ~120–160°C)
+        Scavenge pump
+              ↓
+        Bordo ingresso motore  ← EFFETTO ANTI-ICING
+              ↓  (olio parzialmente raffreddato)
+        Oil cooler  ← raffreddamento finale
+              ↓
+        Serbatoio olio (ricircolo)
+      </div>
+
+      <div class="example-box">
+        <div class="ex-label">✈️ Esempio Pratico — Rolls-Royce Dart (Turboelica storico)</div>
+        <p>Il Rolls-Royce Dart adottava esattamente questo schema a tre vie: aria calda spillata per il cowling anteriore, olio di ritorno per scaldare il lip dell'imbocco, ed elementi elettrici per le pale dell'elica. La fig. 15-2 del testo rappresenta proprio questo tipo di motore. La scelta permetteva di contenere il peso del generatore elettrico, limitando il suo utilizzo alle sole pale.</p>
+      </div>
+
+      <h4>Vantaggi del Sistema Misto</h4>
+      <ul>
+        <li data-icon="✅">Ridondanza: tre fonti indipendenti → tolleranza ai guasti.</li>
+        <li data-icon="✅">Ottimizzazione energetica: l'olio caldo è energia di recupero (non "costa" bleed air né potenza elettrica extra).</li>
+        <li data-icon="✅">Peso generatore minimizzato: elettrico solo dove strettamente necessario.</li>
+      </ul>
+    `
+  },
+
+  ciclo: {
+    badge: '05 · Cicli di Riscaldamento',
+    title: 'CICLO DI RISCALDAMENTO',
+    html: `
+      <h4>Logica del Ciclaggio</h4>
+      <p>Il sistema elettrico non riscalda tutte le superfici in contemporanea: distribuisce i carichi ciclicamente per <strong>minimizzare la potenza di picco</strong> richiesta al generatore.</p>
+
+      <p>Ci sono due tipologie di aree:</p>
+      <ul>
+        <li data-icon="🔴"><strong>Aree a riscaldamento continuo:</strong> rimangono sempre sopra 0°C → impediscono qualsiasi formazione di ghiaccio → tipicamente la presa d'aria principale.</li>
+        <li data-icon="🟡"><strong>Aree a riscaldamento intermittente:</strong> nella fase OFF si forma ghiaccio, nella fase ON il ghiaccio si scioglie alla base e viene rimosso dalle forze aerodinamiche.</li>
+      </ul>
+
+      <h4>Il Grafico del Ciclo (Fig. 15-4)</h4>
+      <div class="cycle-diagram">
+        <svg viewBox="0 0 520 230" xmlns="http://www.w3.org/2000/svg">
+          <!-- Grid -->
+          <line x1="60" y1="20" x2="60" y2="180" stroke="#1e293b" stroke-width="1.5"/>
+          <line x1="60" y1="180" x2="500" y2="180" stroke="#1e293b" stroke-width="1.5"/>
+
+          <!-- Y grid lines -->
+          <line x1="60" y1="60" x2="500" y2="60" stroke="#1e293b" stroke-width="0.7"/>
+          <line x1="60" y1="100" x2="500" y2="100" stroke="#1e293b" stroke-width="0.7"/>
+          <line x1="60" y1="140" x2="500" y2="140" stroke="#1e293b" stroke-width="0.7"/>
+
+          <!-- Axis labels -->
+          <text x="28" y="185" fill="#64748b" font-size="9" font-family="DM Mono,monospace">AMPERE</text>
+          <text x="280" y="205" fill="#64748b" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">SECONDI →</text>
+
+          <!-- SLOW SPEED timeline -->
+          <!-- Air intake cyclic -->
+          <rect x="80" y="100" width="60" height="40" rx="2" fill="rgba(56,189,248,0.25)" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="110" y="125" fill="#38bdf8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">AIR INTAKE</text>
+          <text x="110" y="135" fill="#38bdf8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">CYCLIC</text>
+
+          <!-- Propeller / spinner -->
+          <rect x="200" y="60" width="80" height="80" rx="2" fill="rgba(249,115,22,0.25)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="240" y="100" fill="#f97316" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">PROPELLER</text>
+          <text x="240" y="112" fill="#f97316" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">+ SPINNER</text>
+
+          <!-- Air intake cyclic 2nd -->
+          <rect x="340" y="100" width="60" height="40" rx="2" fill="rgba(56,189,248,0.25)" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="370" y="125" fill="#38bdf8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">AIR INTAKE</text>
+          <text x="370" y="135" fill="#38bdf8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">CYCLIC</text>
+
+          <!-- AIR INTAKE CONTINUOUS (baseline) -->
+          <line x1="60" y1="150" x2="500" y2="150" stroke="#22c55e" stroke-width="2.5"/>
+          <text x="280" y="168" fill="#22c55e" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">AIR INTAKE CONTINUOUS (always ON)</text>
+
+          <!-- Time markers SLOW -->
+          <line x1="80" y1="180" x2="80" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="80" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">0</text>
+          <line x1="140" y1="180" x2="140" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="140" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">60</text>
+          <line x1="153" y1="180" x2="153" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="153" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">75</text>
+          <line x1="200" y1="180" x2="200" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="200" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">165</text>
+          <line x1="215" y1="180" x2="215" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="215" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">180</text>
+          <line x1="340" y1="180" x2="340" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="340" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">240</text>
+          <line x1="460" y1="180" x2="460" y2="185" stroke="#475569" stroke-width="1"/>
+          <text x="460" y="195" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">360</text>
+
+          <!-- Title and labels -->
+          <text x="280" y="15" fill="#f1f5f9" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">UN CICLO COMPLETO (SLOW SPEED → T_ciclo = 360 s)</text>
+
+          <!-- Bracket one complete cycle -->
+          <line x1="80" y1="25" x2="460" y2="25" stroke="#475569" stroke-width="1"/>
+          <line x1="80" y1="22" x2="80" y2="28" stroke="#475569"/>
+          <line x1="460" y1="22" x2="460" y2="28" stroke="#475569"/>
+        </svg>
+      </div>
+
+      <h4>Due Velocità di Ciclo</h4>
+
+      <div class="formula-box">
+        SLOW SPEED  (T_aria bassa, molto freddo):
+          T_ciclo totale ≈ 360 s
+          Intake cyclic:  0→75 s, poi 240→360 s
+          Propeller+Spinner: 165→215 s
+          Intake continuo:  SEMPRE attivo
+
+        FAST SPEED  (T_aria più mite, ghiaccio meno aderente):
+          T_ciclo totale ≈ 120 s
+          Intake cyclic:  0→25 s, poi 80→120 s
+          Propeller+Spinner: 55→65 s
+          Intake continuo:  SEMPRE attivo
+      </div>
+
+      <h4>Perché Due Velocità?</h4>
+      <ul>
+        <li data-icon="❄️"><strong>Freddo estremo (slow):</strong> il ghiaccio è più fragile e sottile — basta un ciclo più lungo per rimuoverlo senza grosso accumulo.</li>
+        <li data-icon="🌡️"><strong>Temperature miti (fast):</strong> il ghiaccio è più umido e aderente — occorre ciclare più frequentemente per evitare accumuli pericolosi.</li>
+      </ul>
+
+      <h4>Garanzia dell'Adeguatezza del Ciclo</h4>
+      <p>Il ciclo deve essere calibrato per assicurare due cose contemporaneamente:</p>
+      <ul>
+        <li data-icon="📏">Lo spessore massimo di ghiaccio accumulato durante la fase OFF deve essere <strong>accettabile dal motore</strong> (non causa stallo o FOD).</li>
+        <li data-icon="🧹">Il periodo ON deve essere sufficientemente lungo da garantire una <strong>completa pulizia</strong> della superficie.</li>
+      </ul>
+
+      <div class="example-box">
+        <div class="ex-label">✈️ Calcolo del Ciclo — Esempio Didattico</div>
+        <p>Supponiamo: tasso di accrezione ghiaccio = 0.5 mm/min. Con T_OFF = 90 s = 1.5 min → spessore massimo = 0.75 mm. Questo strato, alla riaccensione, necessita di un flusso di calore Q = ρ_ghiaccio × L_fusione × spessore × A = 917 × 334000 × 0.00075 × A ≈ 230 kJ/m². Con P = 5 kW/m² → t_ON minimo = 230/5 = 46 s ≈ il valore del ciclo lento (75 s include margine di sicurezza).</p>
+      </div>
+    `
+  },
+
+  compressore: {
+    badge: '06 · FOD & Danni',
+    title: 'DANNI AL COMPRESSORE',
+    html: `
+      <h4>Foreign Object Damage da Ghiaccio</h4>
+      <p>Il distacco di frammenti di ghiaccio è uno dei meccanismi di danneggiamento più critici del compressore assiale. Il ghiaccio può formarsi su superfici non protette o in caso di guasto del sistema antighiaccio.</p>
+
+      <div class="svg-container">
+        <svg viewBox="0 0 520 240" xmlns="http://www.w3.org/2000/svg">
+          <!-- Axial compressor stages -->
+          <text x="260" y="18" fill="#94a3b8" font-size="10" font-family="DM Mono,monospace" text-anchor="middle">COMPRESSORE ASSIALE — EFFETTO FOD DA GHIACCIO</text>
+
+          <!-- Stage 1 stator - covered in ice -->
+          <rect x="80" y="40" width="16" height="160" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+          <!-- Ice accretion on leading edge -->
+          <path d="M80,50 Q65,60 62,120 Q65,180 80,190" stroke="#bfdbfe" stroke-width="2" fill="rgba(191,219,254,0.2)"/>
+          <text x="72" y="220" fill="#38bdf8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">STATORE</text>
+          <text x="72" y="230" fill="#38bdf8" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">+ ghiaccio</text>
+
+          <!-- Rotor blades -->
+          <g id="rotor1">
+            <rect x="130" y="50" width="12" height="140" rx="2" fill="#334155" transform="rotate(-8,136,120)"/>
+            <rect x="160" y="50" width="12" height="140" rx="2" fill="#334155" transform="rotate(-8,166,120)"/>
+            <rect x="190" y="50" width="12" height="140" rx="2" fill="#334155" transform="rotate(-8,196,120)"/>
+            <rect x="220" y="50" width="12" height="140" rx="2" fill="#334155" transform="rotate(-8,226,120)"/>
+          </g>
+          <text x="180" y="220" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">ROTORE 1° STADIO</text>
+
+          <!-- Ice fragment flying -->
+          <polygon points="108,95 118,88 115,100" fill="#bfdbfe" opacity="0.9"/>
+          <path d="M108,95 L140,105" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <!-- Damaged rotor blade -->
+          <rect x="250" y="50" width="12" height="130" rx="2" fill="#334155" transform="rotate(-8,256,120)"/>
+          <path d="M252,85 L265,75 L270,90 Z" fill="#ef4444" opacity="0.8"/>
+          <!-- chip -->
+          <polygon points="256,80 268,72 264,84" fill="#ef4444" opacity="0.6"/>
+          <path d="M266,78 L295,65" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="305" y="63" fill="#ef4444" font-size="9" font-family="DM Mono,monospace">CHIP</text>
+
+          <!-- Stagger / FOD annotations -->
+          <path d="M108,93 Q125,88 138,103" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+          <circle cx="108" cy="93" r="4" fill="none" stroke="#fbbf24" stroke-width="1.5">
+            <animate attributeName="r" values="4;10;4" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/>
+          </circle>
+
+          <!-- Airflow reduction indicator -->
+          <rect x="360" y="60" width="120" height="120" rx="8" fill="#0f172a" stroke="#1e293b"/>
+          <text x="420" y="82" fill="#94a3b8" font-size="9" font-family="DM Mono,monospace" text-anchor="middle">PORTATA ARIA</text>
+          <!-- Normal flow bar -->
+          <rect x="375" y="90" width="25" height="70" rx="3" fill="rgba(34,197,94,0.3)" stroke="#22c55e" stroke-width="1"/>
+          <text x="387" y="175" fill="#22c55e" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">NORM.</text>
+          <!-- Reduced flow bar -->
+          <rect x="415" y="115" width="25" height="45" rx="3" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1"/>
+          <text x="427" y="175" fill="#ef4444" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">GHIACC.</text>
+          <!-- Arrow down -->
+          <text x="420" y="107" fill="#ef4444" font-size="16" text-anchor="middle">↓</text>
+
+          <text x="260" y="240" fill="#64748b" font-size="8" font-family="DM Mono,monospace" text-anchor="middle">Fig. C — Meccanismo FOD e riduzione portata per formazione di ghiaccio</text>
+        </svg>
+      </div>
+
+      <h4>Meccanismo di Danneggiamento</h4>
+      <ul>
+        <li data-icon="1️⃣">Il ghiaccio si forma sul bordo d'attacco delle palette guida statoriche o sul nose cowling.</li>
+        <li data-icon="2️⃣">Il peso e la variazione di forma aerodinamica generano carichi asimmetrici.</li>
+        <li data-icon="3️⃣">Il ghiaccio si stacca sotto l'azione delle forze aerodinamiche e vibrazionali.</li>
+        <li data-icon="4️⃣">I frammenti impattano le palette del rotore a velocità periferiche di <strong>100–400 m/s</strong>.</li>
+        <li data-icon="5️⃣">Risultato: erosione, scheggiatura (chipping), deformazione plastica delle pale.</li>
+      </ul>
+
+      <h4>Effetti sul Funzionamento del Compressore</h4>
+
+      <div class="formula-box">
+        Riduzione portata:  ṁ_eff = ṁ_nom × (1 − ΔA/A)
+        
+        Dove ΔA = riduzione di sezione d'ingresso per accumulo ghiaccio
+        
+        Con ΔA/A = 10%:
+          → perdita di portata ≈ 10%
+          → perdita di spinta  ≈ 5–8% (dipende dal motore)
+          → rischio stallo del compressore se si supera la linea di pompaggio
+      </div>
+
+      <div class="warning-box">
+        Lo stallo del compressore (compressor stall / surge) è l'emergenza più grave: inversione istantanea del flusso, perdita completa di spinta, rischio di flammeout. La riduzione di portata da ghiaccio è una causa nota di surge non comandato.
+      </div>
+
+      <h4>Perché il Rotore si Protegge da Solo</h4>
+      <p>Le palette del rotore sono protette dalla <strong>forza centrifuga</strong>, che agisce radialmente verso l'esterno su ogni massa di ghiaccio formatasi sulla pala:</p>
+
+      <div class="formula-box">
+        F_centrifuga = m_ghiaccio × ω² × r
+
+        Esempio — 1° stadio compressore turbofan:
+          ω ≈ 1200 rad/s (≈11.500 rpm)
+          r ≈ 0.3 m
+          m_ghiaccio ≈ 5 g = 0.005 kg
+          
+          F = 0.005 × (1200)² × 0.3 = 2160 N
+          
+        → Forza enorme per una massa minuscola: il ghiaccio
+          viene espulso immediatamente non appena si forma.
+      </div>
+
+      <div class="example-box">
+        <div class="ex-label">✈️ Evento Reale — Engine Ice Crystal Icing</div>
+        <p>A quote > FL220, cristalli di ghiaccio possono depositarsi sulle palette del compressore (ice crystal icing, ICI) senza fondersi — condizione non coperta dai sistemi convenzionali. Questo ha causato diversi flame-out non spiegati fino agli anni 2000. Dal 2016, FAR/CS-25 e AMC-25 includono requisiti specifici per le zone ICI, con protezione anche degli stadi interni del compressore.</p>
+      </div>
+    `
+  }
+
+};
+
+function openModal(id) {
+  const data = modals[id];
+  if (!data) return;
+  document.getElementById('modal-badge').textContent = data.badge;
+  document.getElementById('modal-title').textContent = data.title;
+  document.getElementById('modal-body').innerHTML = data.html;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Scroll to top
+  document.getElementById('modal-box').scrollTop = 0;
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
